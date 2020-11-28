@@ -108,5 +108,7 @@ namespace XmlGridReader.Tests
             // Assert
             actual.Should().BeEquivalentTo(expected);
         }
+
+        // TODO: add other primitives, value types, enums
     }
 }

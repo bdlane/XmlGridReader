@@ -8,6 +8,21 @@ namespace XmlGridReader.Tests
 {
     public class SingleColumnTests
     {
+        [Theory]
+        [InlineData("<Data />")]
+        [InlineData("<Data></Data>")]
+        public void Given_NoRows_When_Read_Returns_EmptyCollection(string xml)
+        {
+            // Arrange
+            var expected = Enumerable.Empty<string>();
+
+            // Act
+            var actual = Reader.Read<string>(xml);
+
+            // Assert
+            actual.Should().BeEquivalentTo(expected);
+        }
+
         [Theory, AutoData]
         public void Given_SingleRowStringColumn_When_Read_Returns_CollectionOfStrings(string s)
         {

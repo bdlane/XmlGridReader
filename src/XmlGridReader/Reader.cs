@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Xml;
 
@@ -38,10 +39,20 @@ namespace XmlGridReader
 
         private static Func<XmlReader, object> GetDeserializer(Type type)
         {
+            var converter = GetTypeConverter(type);
+
             return new Func<XmlReader, object>(r =>
             {
-                return r.ReadElementContentAsString();
+                return converter.ConvertFromInvariantString(
+                    r.ReadElementContentAsString());
             });
+        }
+
+        private static TypeConverter GetTypeConverter(Type type)
+        {
+            // TODO: implement caching
+            //  will need to implement locking
+            return TypeDescriptor.GetConverter(type);
         }
     }
 }

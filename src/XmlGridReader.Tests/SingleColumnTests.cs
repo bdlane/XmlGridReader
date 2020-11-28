@@ -63,5 +63,26 @@ namespace XmlGridReader.Tests
             // Assert
             actual.Should().BeEquivalentTo(expected);
         }
+
+        [Theory, AutoData]
+        public void Given_IntColumn_When_Read_Returns_CollectionOfInts(IEnumerable<int> expected)
+        {
+            // Arrange
+            var rowTemplate =
+                "  <Row>\r\n" +
+                "      <Col1>{0}</Col1>\r\n" +
+                "  </Row>\r\n";
+
+            var rows = expected.Select(i => string.Format(rowTemplate, i))
+                .Aggregate((c, n) => c + n);
+
+            var xml = $"<Data>\r\n{rows}</Data>";
+
+            // Act
+            var actual = Reader.Read<int>(xml);
+
+            // Assert
+            actual.Should().BeEquivalentTo(expected);
+        }
     }
 }

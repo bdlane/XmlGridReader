@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using AutoFixture.Xunit2;
@@ -80,6 +81,29 @@ namespace XmlGridReader.Tests
 
             // Act
             var actual = Reader.Read<int>(xml);
+
+            // Assert
+            actual.Should().BeEquivalentTo(expected);
+        }
+
+        [Theory, AutoData]
+        public void Given_DateTimeColumn_When_Read_Returns_CollectionOfDateTimes(IEnumerable<DateTime> expected)
+        {
+            // Arrange
+            expected = expected.Select(d => d.Date);
+
+            var rowTemplate =
+                "  <Row>\r\n" +
+                "      <Col1>{0}</Col1>\r\n" +
+                "  </Row>\r\n";
+
+            var rows = expected.Select(d => string.Format(rowTemplate, d.ToString("yyyy-MM-dd")))
+                .Aggregate((c, n) => c + n);
+
+            var xml = $"<Data>\r\n{rows}</Data>";
+
+            // Act
+            var actual = Reader.Read<DateTime>(xml);
 
             // Assert
             actual.Should().BeEquivalentTo(expected);

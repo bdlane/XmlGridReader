@@ -14,7 +14,12 @@ namespace XmlGridReader.Tests
             // Arrange
             var expected = new List<string> { s };
 
-            var xml = $"<Data><Col1><{s}/Col1></Data>";
+            var xml =
+                $"<Data>\r\n" +
+                $"  <Row>\r\n" +
+                $"      <Col1>{s}</Col1>\r\n" +
+                $"  </Row>\r\n" +
+                $"</Data>";
 
             // Act
             var actual = Reader.Read<string>(xml);
@@ -27,8 +32,15 @@ namespace XmlGridReader.Tests
         public void Given_MultipleRowStringColumn_When_Read_Returns_CollectionOfStrings(IEnumerable<string> expected)
         {
             // Arrange
-            var rows = expected.Select(s => $"<Col1>{s}</Col1>").Aggregate((c, n) => c + n);
-            var xml = $"<Data>{rows}</Data>";
+            var rowTemplate =
+                "  <Row>\r\n" +
+                "      <Col1>{0}</Col1>\r\n" +
+                "  </Row>\r\n";
+
+            var rows = expected.Select(s => string.Format(rowTemplate, s))
+                .Aggregate((c, n) => c + n);
+
+            var xml = $"<Data>\r\n{rows}</Data>";
 
             // Act
             var actual = Reader.Read<string>(xml);

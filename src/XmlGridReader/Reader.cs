@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Xml;
 
 namespace XmlGridReader
 {
@@ -7,7 +9,39 @@ namespace XmlGridReader
     {
         public static IEnumerable<T> Read<T>(string xml)
         {
-            throw new NotImplementedException();
+            if (xml is null)
+            {
+                throw new ArgumentNullException(nameof(xml));
+            }
+
+            // Might need to move this to get first row columns
+            var deserializer = GetDeserializer(typeof(T));
+
+            var result = new List<T>();
+
+            var settings = new XmlReaderSettings { IgnoreWhitespace = true };
+
+            using (var reader = XmlReader.Create(new StringReader(xml), settings))
+            {
+                reader.Read(); // <Data>
+
+                while (reader.Read() && reader.NodeType != XmlNodeType.EndElement) // Row
+                {
+                    reader.Read();
+                    result.Add((T)deserializer(reader));
+                }
+
+            }
+
+            return result;
+        }
+
+        private static Func<XmlReader, object> GetDeserializer(Type type)
+        {
+            return new Func<XmlReader, object>(r =>
+            {
+                return r.ReadElementContentAsString();
+            });
         }
     }
 }

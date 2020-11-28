@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.808.2
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XmlGridReader", "XmlGridReader\XmlGridReader.csproj", "{D171F178-7EA9-430B-8EE4-7AF653DD0E31}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XmlGridReader.Tests", "XmlGridReader.Tests\XmlGridReader.Tests.csproj", "{BC51BFD5-6DAD-46D8-A19D-6DACE146DF87}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D171F178-7EA9-430B-8EE4-7AF653DD0E31}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D171F178-7EA9-430B-8EE4-7AF653DD0E31}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D171F178-7EA9-430B-8EE4-7AF653DD0E31}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D171F178-7EA9-430B-8EE4-7AF653DD0E31}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BC51BFD5-6DAD-46D8-A19D-6DACE146DF87}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BC51BFD5-6DAD-46D8-A19D-6DACE146DF87}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BC51BFD5-6DAD-46D8-A19D-6DACE146DF87}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BC51BFD5-6DAD-46D8-A19D-6DACE146DF87}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {1B9BFCDD-1D86-4026-BB7F-55B15FB33835}
+	EndGlobalSection
+EndGlobal

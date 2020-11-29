@@ -39,7 +39,7 @@ IEnumerable<Book> books = Reader.Read<Book>(xml);
 
 ## Why did I create XmlGridReader?
 
-At work, I needed to migrate some data access code from using SQL to using a web API that returned table-like data in XML. The original SQL code used [Dapper](https://github.com/StackExchange/Dapper), and I wanted to keep the benefits of a simple convention-based deserializer.
+I needed to migrate some data access code from using SQL to using a web API that returned table-like data in XML. The original SQL code used [Dapper](https://github.com/StackExchange/Dapper), and I wanted to keep the benefits of a simple convention-based deserializer.
 
 The web API and the XML it returns has some idiosyncrasies, which have influenced the design of this library.
 

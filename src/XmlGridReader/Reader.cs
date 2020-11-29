@@ -18,14 +18,14 @@ namespace XmlGridReader
                 throw new ArgumentNullException(nameof(xml));
             }
 
-            // Might need to move this to get first row columns
+            // Might need to pass XML/fields to allow varying order
             var deserializer = GetDeserializer(typeof(T));
 
             var result = new List<T>();
 
             var settings = new XmlReaderSettings { IgnoreWhitespace = true };
 
-            // Assumes XML is wel formed
+            // Assumes XML is well formed
             using (var reader = XmlReader.Create(new StringReader(xml), settings))
             {
                 reader.Read(); // <Data>
@@ -58,7 +58,38 @@ namespace XmlGridReader
                 return GetComplexTypeCtorDeserializer(type);
             }
 
-            throw new NotSupportedException();
+            return GetComplexTypePropDerializer(type);
+        }
+
+        private static Func<XmlReader, object> GetComplexTypePropDerializer(Type type)
+        {
+            // Assumes
+            //  - nodes and props are in the same order
+           //   - have same casing
+            //  - has correct number of nodes            
+            var paramReaderExp = Expression.Parameter(typeof(XmlReader), "reader");
+
+            var readElementContentAsStringMethodInfo =
+                typeof(XmlReader).GetMethod(
+                    nameof(XmlReader.ReadElementContentAsString),
+                    new Type[] { });
+
+            var initializerExps = type.GetProperties().Select(p =>
+            {
+                var readContentExp = Expression.Call(
+                    paramReaderExp,
+                    readElementContentAsStringMethodInfo);
+
+                var castExp = GetTypeConverterExpression(p.PropertyType, readContentExp);
+
+                return Expression.Bind(p, castExp);
+            });
+
+            var initExpression = Expression.MemberInit(
+                Expression.New(type),
+                initializerExps);
+
+            return Expression.Lambda<Func<XmlReader, object>>(initExpression, paramReaderExp).Compile();
         }
 
         private static Func<XmlReader, object> GetComplexTypeCtorDeserializer(Type type)

@@ -1,28 +1,12 @@
+using AutoFixture.Xunit2;
+using FluentAssertions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using AutoFixture.Xunit2;
-using FluentAssertions;
 using Xunit;
 
 namespace XmlGridReader.Tests
 {
-    public class Book
-    {
-        public Book(string title, int numberOfPages, DateTime datePublished)
-        {
-            Title = title ?? throw new ArgumentNullException(nameof(title));
-            NumberOfPages = numberOfPages;
-            DatePublished = datePublished;
-        }
-
-        public string Title { get; }
-
-        public int NumberOfPages { get; }
-
-        public DateTime DatePublished { get; }
-    }
-
     public class SingleColumnTests
     {
         [Theory]

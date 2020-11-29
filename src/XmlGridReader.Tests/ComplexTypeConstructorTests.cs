@@ -1,7 +1,8 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using AutoFixture.Xunit2;
+﻿using AutoFixture.Xunit2;
 using FluentAssertions;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Xunit;
 
 namespace XmlGridReader.Tests
@@ -34,6 +35,22 @@ namespace XmlGridReader.Tests
 
             // Assert
             actual.Should().BeEquivalentTo(expected);
+        }
+
+        public class Book
+        {
+            public Book(string title, int numberOfPages, DateTime datePublished)
+            {
+                Title = title ?? throw new ArgumentNullException(nameof(title));
+                NumberOfPages = numberOfPages;
+                DatePublished = datePublished;
+            }
+
+            public string Title { get; }
+
+            public int NumberOfPages { get; }
+
+            public DateTime DatePublished { get; }
         }
     }
 }

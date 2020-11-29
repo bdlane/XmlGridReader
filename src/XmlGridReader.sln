@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XmlGridReader", "XmlGridRea
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XmlGridReader.Tests", "XmlGridReader.Tests\XmlGridReader.Tests.csproj", "{BC51BFD5-6DAD-46D8-A19D-6DACE146DF87}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XmlGridReader.Benchmarks", "XmlGridReader.Benchmarks\XmlGridReader.Benchmarks.csproj", "{EA2BE47E-6E91-4A24-8803-578FBC3BCDDB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{BC51BFD5-6DAD-46D8-A19D-6DACE146DF87}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BC51BFD5-6DAD-46D8-A19D-6DACE146DF87}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BC51BFD5-6DAD-46D8-A19D-6DACE146DF87}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EA2BE47E-6E91-4A24-8803-578FBC3BCDDB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EA2BE47E-6E91-4A24-8803-578FBC3BCDDB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EA2BE47E-6E91-4A24-8803-578FBC3BCDDB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EA2BE47E-6E91-4A24-8803-578FBC3BCDDB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

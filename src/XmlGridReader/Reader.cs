@@ -28,7 +28,8 @@ namespace XmlGridReader
             // Assumes XML is well formed
             using (var reader = XmlReader.Create(new StringReader(xml), settings))
             {
-                reader.Read(); // <Data>
+                // TODO: add test for XML declaration
+                reader.MoveToContent(); // <Data>
 
                 while (reader.Read() && reader.NodeType != XmlNodeType.EndElement) // Row
                 {

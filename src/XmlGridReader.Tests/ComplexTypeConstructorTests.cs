@@ -10,7 +10,7 @@ namespace XmlGridReader.Tests
     public class ComplexTypeConstructorTests
     {
         [Theory, AutoData]
-        public void Given_SingleRow_When_Read_Returns_CollectionOfBooks(IEnumerable<Book> expected)
+        public void Given_MultipleRows_When_Read_Returns_CollectionOfBooks(IEnumerable<Book> expected)
         {
             // Arrange
             var rowTemplate =

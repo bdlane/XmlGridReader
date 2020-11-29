@@ -48,3 +48,23 @@ The web API and the XML it returns has some idiosyncrasies, which have influence
 If the type argument of `Read<T>(string)` is a class (excluding `string`), the data will either be mapped to the class' public settable properties, or to the class' single non-parameterless constructor. The 'columns' in the data must match the order of parameters or properties in the target.
 
 Empty/null cells must be represented as empty elements i.e. `<element></element>`, not omitted or with the `xsi:nil` attribute.
+
+## Benchmarks
+
+``` ini
+
+BenchmarkDotNet=v0.12.1, OS=macOS Catalina 10.15.7 (19H2) [Darwin 19.6.0]
+Intel Core i5-1038NG7 CPU 2.00GHz, 1 CPU, 8 logical and 4 physical cores
+.NET Core SDK=5.0.100
+  [Host]     : .NET Core 3.1.10 (CoreCLR 4.700.20.51601, CoreFX 4.700.20.51901), X64 RyuJIT
+  DefaultJob : .NET Core 3.1.10 (CoreCLR 4.700.20.51601, CoreFX 4.700.20.51901), X64 RyuJIT
+
+
+```
+|                    Method | NumberOfRecords |     Mean |     Error |    StdDev |   Median | Ratio | RatioSD | Rank |
+|-------------------------- |---------------- |---------:|----------:|----------:|---------:|------:|--------:|-----:|
+|             XmlSerializer |            1000 | 1.784 ms | 0.0351 ms | 0.0651 ms | 1.762 ms |  1.00 |    0.00 |    2 |
+|                 LinqToXml |            1000 | 2.010 ms | 0.0390 ms | 0.0478 ms | 2.005 ms |  1.11 |    0.05 |    3 |
+|                 XmlReader |            1000 | 1.132 ms | 0.0270 ms | 0.0789 ms | 1.135 ms |  0.65 |    0.05 |    1 |
+|  XmlGridReader_Properties |            1000 | 2.718 ms | 0.0760 ms | 0.2204 ms | 2.743 ms |  1.54 |    0.12 |    4 |
+| XmlGridReader_Constructor |            1000 | 2.630 ms | 0.0666 ms | 0.1964 ms | 2.577 ms |  1.56 |    0.10 |    4 |

@@ -41,14 +41,28 @@ namespace XmlGridReader
             return result;
         }
 
+        private static Dictionary<Type, Func<XmlReader, object>> deserializers =
+            new Dictionary<Type, Func<XmlReader, object>>();
+
         private static Func<XmlReader, object> GetDeserializer(Type type)
         {
-            // TODO: implement deserializer cache
-            //  will need to implement locking
+            // TODO: make this thread-safe
+            if (deserializers.TryGetValue(type, out var deserializer))
+            {
+                return deserializer;
+            }
 
+            deserializer = CreateDeserializer(type);
+            deserializers.Add(type, deserializer);
+
+            return deserializer;
+        }
+
+        private static Func<XmlReader, object> CreateDeserializer(Type type)
+        {
             if (type == typeof(string) || type.IsValueType)
             {
-                return GetValueTypeDeserializer(type);
+                return CreateValueTypeDeserializer(type);
             }
 
             var ctors = type.GetConstructors();
@@ -56,13 +70,13 @@ namespace XmlGridReader
             // TODO: deal with more then ctor?
             if (ctors.Any(c => c.GetParameters().Any()))
             {
-                return GetComplexTypeCtorDeserializer(type);
+                return CreateComplexTypeCtorDeserializer(type);
             }
 
-            return GetComplexTypePropDerializer(type);
+            return CreateComplexTypePropDerializer(type);
         }
 
-        private static Func<XmlReader, object> GetComplexTypePropDerializer(Type type)
+        private static Func<XmlReader, object> CreateComplexTypePropDerializer(Type type)
         {
             // Assumes
             //  - nodes and props are in the same order
@@ -93,7 +107,7 @@ namespace XmlGridReader
             return Expression.Lambda<Func<XmlReader, object>>(initExpression, paramReaderExp).Compile();
         }
 
-        private static Func<XmlReader, object> GetComplexTypeCtorDeserializer(Type type)
+        private static Func<XmlReader, object> CreateComplexTypeCtorDeserializer(Type type)
         {
             // TODO: cache XmlReader types?
             var ctor = type.GetConstructors().Single();
@@ -149,7 +163,7 @@ namespace XmlGridReader
                     nameof(TypeConverter.ConvertFromInvariantString),
                     new[] { typeof(string) });
 
-        private static Func<XmlReader, object> GetValueTypeDeserializer(Type type)
+        private static Func<XmlReader, object> CreateValueTypeDeserializer(Type type)
         {
             var converter = GetTypeConverter(type);
 

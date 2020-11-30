@@ -46,14 +46,20 @@ namespace XmlGridReader
 
         private static Func<XmlReader, object> GetDeserializer(Type type)
         {
-            // TODO: make this thread-safe
-            if (deserializers.TryGetValue(type, out var deserializer))
+            if (!deserializers.TryGetValue(type, out var deserializer))
             {
-                return deserializer;
-            }
+                lock (deserializers)
+                {
+                    if (deserializers.TryGetValue(type, out deserializer))
+                    {
+                        return deserializer;
+                    }
 
-            deserializer = CreateDeserializer(type);
-            deserializers.Add(type, deserializer);
+                    deserializer = CreateDeserializer(type);
+
+                    deserializers.Add(type, deserializer);
+                }
+            }
 
             return deserializer;
         }
@@ -80,7 +86,7 @@ namespace XmlGridReader
         {
             // Assumes
             //  - nodes and props are in the same order
-           //   - have same casing
+            //   - have same casing
             //  - has correct number of nodes            
             var paramReaderExp = Expression.Parameter(typeof(XmlReader), "reader");
 
@@ -174,11 +180,26 @@ namespace XmlGridReader
             });
         }
 
+        private static Dictionary<Type, TypeConverter> typeConverters =
+            new Dictionary<Type, TypeConverter>();
+
         private static TypeConverter GetTypeConverter(Type type)
         {
-            // TODO: implement caching
-            //  will need to implement locking
-            return TypeDescriptor.GetConverter(type);
+            if (!typeConverters.TryGetValue(type, out var typeConverter))
+            {
+                lock (typeConverters)
+                {
+                    if (typeConverters.TryGetValue(type, out typeConverter))
+                    {
+                        return typeConverter;
+                    }
+
+                    typeConverter = TypeDescriptor.GetConverter(type);
+                    typeConverters.Add(type, typeConverter);
+                }
+            }
+
+            return typeConverter;
         }
     }
 }

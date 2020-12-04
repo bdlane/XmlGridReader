@@ -57,8 +57,14 @@ namespace XmlGridReader
 
                 if (!deserializers.TryGetValue(key, out var deserializer))
                 {
-                    deserializer = CreateDeserializer(type, reader.Columns);
-                    deserializers.Add(key, deserializer);
+                    lock (deserializers)
+                    {
+                        if (!deserializers.TryGetValue(key, out deserializer))
+                        {
+                            deserializer = CreateDeserializer(type, reader.Columns);
+                            deserializers.Add(key, deserializer);
+                        }
+                    }
                 }
 
                 return deserializer;

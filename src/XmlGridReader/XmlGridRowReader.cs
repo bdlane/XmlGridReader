@@ -77,7 +77,7 @@ namespace XmlGridReader
 
         int current = 0;
         // Just for the moment...
-        public string ReadElementContentAsString()
+        public string ReadColumnValue()
         {
             return Values[current++];
         }

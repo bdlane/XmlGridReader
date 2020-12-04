@@ -4,7 +4,6 @@ using System.ComponentModel;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Xml;
 
 namespace XmlGridReader
 {
@@ -80,18 +79,18 @@ namespace XmlGridReader
             var orderedProps = fields.Select(f => props.Single(p => p.Name == f));
             var paramReaderExp = Expression.Parameter(typeof(XmlGridRowReader), "reader");
 
-            var readElementContentAsStringMethodInfo =
+            var readColumnValueMethodInfo =
                 typeof(XmlGridRowReader).GetMethod(
-                    nameof(XmlGridRowReader.ReadElementContentAsString),
+                    nameof(XmlGridRowReader.ReadColumnValue),
                     new Type[] { });
 
             var initializerExps = orderedProps.Select(p =>
             {
-                var readContentExp = Expression.Call(
+                var readColumnValueExp = Expression.Call(
                     paramReaderExp,
-                    readElementContentAsStringMethodInfo);
+                    readColumnValueMethodInfo);
 
-                var castExp = GetTypeConverterExpression(p.PropertyType, readContentExp);
+                var castExp = GetTypeConverterExpression(p.PropertyType, readColumnValueExp);
 
                 return Expression.Bind(p, castExp);
             });
@@ -116,9 +115,9 @@ namespace XmlGridReader
 
             var paramReaderExp = Expression.Parameter(typeof(XmlGridRowReader), "reader");
 
-            var readElementContentAsStringMethodInfo =
+            var readColumnValueMethodInfo =
                 typeof(XmlGridRowReader).GetMethod(
-                    nameof(XmlGridRowReader.ReadElementContentAsString),
+                    nameof(XmlGridRowReader.ReadColumnValue),
                     new Type[] { });
 
             // Assumes
@@ -126,11 +125,11 @@ namespace XmlGridReader
             //  - has correct number of nodes
             var argExps = ctor.GetParameters().Select(p =>
             {
-                var readContentExp = Expression.Call(
+                var readColumnValueExp = Expression.Call(
                     paramReaderExp,
-                    readElementContentAsStringMethodInfo);
+                    readColumnValueMethodInfo);
 
-                return GetTypeConverterExpression(p.ParameterType, readContentExp);
+                return GetTypeConverterExpression(p.ParameterType, readColumnValueExp);
             });
 
             var newExp = Expression.New(ctor, argExps);
@@ -171,7 +170,7 @@ namespace XmlGridReader
             return new Func<XmlGridRowReader, object>(r =>
             {
                 return converter.ConvertFromInvariantString(
-                    r.ReadElementContentAsString());
+                    r.ReadColumnValue());
             });
         }
 

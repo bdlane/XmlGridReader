@@ -9,8 +9,11 @@ using System.Xml;
 
 namespace XmlGridReader
 {
-    public class Reader
+    public static partial class Reader
     {
+        private static readonly XmlReaderSettings settings =
+            new XmlReaderSettings { IgnoreWhitespace = true };
+
         public static IEnumerable<T> Read<T>(string xml)
         {
             if (xml is null)
@@ -19,11 +22,10 @@ namespace XmlGridReader
             }
 
             // Might need to pass XML/fields to allow varying order
-            var deserializer = GetDeserializer(typeof(T));
+            var deserializer = GetDeserializer(typeof(T), xml);
 
             var result = new List<T>();
 
-            var settings = new XmlReaderSettings { IgnoreWhitespace = true };
 
             // Assumes XML is well formed
             using (var reader = XmlReader.Create(new StringReader(xml), settings))
@@ -40,31 +42,14 @@ namespace XmlGridReader
 
             return result;
         }
-
-        private static Dictionary<Type, Func<XmlReader, object>> deserializers =
-            new Dictionary<Type, Func<XmlReader, object>>();
-
-        private static Func<XmlReader, object> GetDeserializer(Type type)
+        private static Func<XmlReader, object> GetDeserializer(
+            Type type, string xml)
         {
-            if (!deserializers.TryGetValue(type, out var deserializer))
-            {
-                lock (deserializers)
-                {
-                    if (deserializers.TryGetValue(type, out deserializer))
-                    {
-                        return deserializer;
-                    }
-
-                    deserializer = CreateDeserializer(type);
-
-                    deserializers.Add(type, deserializer);
-                }
-            }
-
-            return deserializer;
+            return TypeDeserializerCache.GetDeserializer(type, xml);
         }
 
-        private static Func<XmlReader, object> CreateDeserializer(Type type)
+        private static Func<XmlReader, object> CreateDeserializer(
+            Type type, List<string> fields)
         {
             if (type == typeof(string) || type.IsValueType)
             {
@@ -79,15 +64,19 @@ namespace XmlGridReader
                 return CreateComplexTypeCtorDeserializer(type);
             }
 
-            return CreateComplexTypePropDerializer(type);
+            return CreateComplexTypePropDerializer(type, fields);
         }
 
-        private static Func<XmlReader, object> CreateComplexTypePropDerializer(Type type)
+        private static Func<XmlReader, object> CreateComplexTypePropDerializer(
+            Type type, List<string> fields)
         {
+            // Check for duplicates in fields?
+            var props = type.GetProperties();
+
             // Assumes
-            //  - nodes and props are in the same order
-            //   - have same casing
-            //  - has correct number of nodes            
+            //  - nodes and props have same casing
+            //  - has correct number of nodes
+            var orderedProps = fields.Select(f => props.Single(p => p.Name == f));
             var paramReaderExp = Expression.Parameter(typeof(XmlReader), "reader");
 
             var readElementContentAsStringMethodInfo =
@@ -95,7 +84,7 @@ namespace XmlGridReader
                     nameof(XmlReader.ReadElementContentAsString),
                     new Type[] { });
 
-            var initializerExps = type.GetProperties().Select(p =>
+            var initializerExps = orderedProps.Select(p =>
             {
                 var readContentExp = Expression.Call(
                     paramReaderExp,
@@ -117,6 +106,12 @@ namespace XmlGridReader
         {
             // TODO: cache XmlReader types?
             var ctor = type.GetConstructors().Single();
+
+            // Need to assign variables,
+            // as the reader can only be called in order,
+            // but the params may be in a different order
+            // Then assign the variables to the ctor params
+            // in the correct order.
 
             var paramReaderExp = Expression.Parameter(typeof(XmlReader), "reader");
 
@@ -141,7 +136,6 @@ namespace XmlGridReader
 
             return Expression.Lambda<Func<XmlReader, object>>(newExp, paramReaderExp).Compile();
         }
-
 
         private static Expression GetTypeConverterExpression(
             Type type, Expression rawValueAccessorExp)

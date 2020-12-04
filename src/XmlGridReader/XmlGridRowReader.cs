@@ -25,19 +25,20 @@ namespace XmlGridReader
             new List<string>();
 
         /// <summary>
-        /// Moves the reader to the first row
+        /// Moves the reader to the grid, positioned at the first row
         /// </summary>
         public bool MoveToGrid()
         {
-            // Needs to be more robust
-            // Consider name-agnostic root node
-            reader.MoveToContent(); // <Data>
+            // TODO: Needs to be more robust - consider if called
+            // multiple times
+            reader.MoveToContent(); // <Root>
             reader.Read();
-            // If there are no rows, this will either be NodeType.None in the
-            // case of a self-closing tag, or </Data> otherwise
 
-            return reader.NodeType != XmlNodeType.None
-                && reader.NodeType != XmlNodeType.EndElement;
+            // If there are no rows, the reader will now either be
+            // NodeType.None in the case of a self-closing tag,
+            // or </Root> otherwise.
+
+            return reader.NodeType == XmlNodeType.Element;
         }
 
         public bool ReadRow()

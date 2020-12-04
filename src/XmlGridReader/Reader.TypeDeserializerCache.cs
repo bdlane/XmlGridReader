@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Xml;
 
 namespace XmlGridReader
 {
@@ -44,8 +42,6 @@ namespace XmlGridReader
             private Func<XmlGridRowReader, object> GetDeserializer(
                 XmlGridRowReader reader)
             {
-                // Needs locks
-
                 reader.ReadRow();
 
                 if (!reader.Columns.Any())

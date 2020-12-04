@@ -13,8 +13,8 @@ namespace XmlGridReader
             private static readonly Dictionary<Type, TypeDeserializerCache> byType =
                 new Dictionary<Type, TypeDeserializerCache>();
 
-            public static Func<XmlReader, object> GetDeserializer(
-                Type type, string xml)
+            public static Func<XmlGridRowReader, object> GetDeserializer(
+                Type type, XmlGridRowReader reader)
             {
                 if (!byType.TryGetValue(type, out var deserializers))
                 {
@@ -29,70 +29,41 @@ namespace XmlGridReader
                     }
                 }
 
-                return deserializers.GetDeserializer(xml);
+                return deserializers.GetDeserializer(reader);
             }
 
             private Type type;
-            private readonly Dictionary<DeserializerKey, Func<XmlReader, object>> deserializers =
-                new Dictionary<DeserializerKey, Func<XmlReader, object>>();
+            private readonly Dictionary<DeserializerKey, Func<XmlGridRowReader, object>> deserializers =
+                new Dictionary<DeserializerKey, Func<XmlGridRowReader, object>>();
 
             public TypeDeserializerCache(Type type)
             {
                 this.type = type;
             }
 
-            private static Func<XmlReader, object> d;
-
-            private Func<XmlReader, object> GetDeserializer(string xml)
+            private Func<XmlGridRowReader, object> GetDeserializer(
+                XmlGridRowReader reader)
             {
                 // Needs locks
 
-                //List<string> fields = null;// GetFields(xml);
-                List<string> fields = GetFields(xml);
-                //if (d is null)
-                //{
-                //    d = CreateDeserializer(type, fields);
-                //}
+                reader.ReadRow();
 
-                //return d;
+                if (!reader.Columns.Any())
+                {
+                    throw new InvalidOperationException("No columns");
+                }
 
-                var key = new DeserializerKey(fields);
+                var key = new DeserializerKey(reader.Columns);
 
                 if (!deserializers.TryGetValue(key, out var deserializer))
                 {
-                    deserializer = CreateDeserializer(type, fields);
+                    deserializer = CreateDeserializer(type, reader.Columns);
                     deserializers.Add(key, deserializer);
                 }
 
                 return deserializer;
             }
-
-            private static XmlReaderSettings settings = new XmlReaderSettings { IgnoreWhitespace = true };
-
-            private static List<string> GetFields(string xml)
-            {
-                var result = new List<string>();
-
-                // Assumes XML is well formed
-                using (var reader = XmlReader.Create(new StringReader(xml), settings))
-                {
-                    // TODO: add test for XML declaration
-                    reader.MoveToContent(); // <Data>
-                    //return result;
-                    reader.Read(); // Row
-
-                    while (reader.Read() && reader.NodeType != XmlNodeType.EndElement) // Column
-                    {
-                        result.Add(reader.LocalName);
-                        reader.Read(); // Text content
-                        reader.Read(); // End element
-                    }
-                }
-
-                return result;
-            }
         }
-
 
         private class DeserializerKey : IEquatable<DeserializerKey>
         {

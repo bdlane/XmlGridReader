@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -11,9 +10,6 @@ namespace XmlGridReader
 {
     public static partial class Reader
     {
-        private static readonly XmlReaderSettings settings =
-            new XmlReaderSettings { IgnoreWhitespace = true };
-
         public static IEnumerable<T> Read<T>(string xml)
         {
             if (xml is null)
@@ -21,34 +17,39 @@ namespace XmlGridReader
                 throw new ArgumentNullException(nameof(xml));
             }
 
-            // Might need to pass XML/fields to allow varying order
-            var deserializer = GetDeserializer(typeof(T), xml);
-
-            var result = new List<T>();
-
-
-            // Assumes XML is well formed
-            using (var reader = XmlReader.Create(new StringReader(xml), settings))
+            using (var reader = new XmlGridRowReader(xml))
             {
-                // TODO: add test for XML declaration
-                reader.MoveToContent(); // <Data>
+                var result = new List<T>();
 
-                while (reader.Read() && reader.NodeType != XmlNodeType.EndElement) // Row
+                if (!reader.MoveToGrid())
                 {
-                    reader.Read();
-                    result.Add((T)deserializer(reader));
+                    return result;
                 }
+
+                var deserializer = GetDeserializer(typeof(T), reader);
+
+                // Assumes XML is well formed
+
+                // Reader will already be positioned on a row, so excute
+                // a deserialize at least once
+                do
+                {
+                    var obj = deserializer(reader);
+
+                    result.Add((T)obj);
+                } while (reader.ReadRow());
+
+                return result;
             }
 
-            return result;
         }
-        private static Func<XmlReader, object> GetDeserializer(
-            Type type, string xml)
+        private static Func<XmlGridRowReader, object> GetDeserializer(
+            Type type, XmlGridRowReader reader)
         {
-            return TypeDeserializerCache.GetDeserializer(type, xml);
+            return TypeDeserializerCache.GetDeserializer(type, reader);
         }
 
-        private static Func<XmlReader, object> CreateDeserializer(
+        private static Func<XmlGridRowReader, object> CreateDeserializer(
             Type type, List<string> fields)
         {
             if (type == typeof(string) || type.IsValueType)
@@ -67,7 +68,7 @@ namespace XmlGridReader
             return CreateComplexTypePropDerializer(type, fields);
         }
 
-        private static Func<XmlReader, object> CreateComplexTypePropDerializer(
+        private static Func<XmlGridRowReader, object> CreateComplexTypePropDerializer(
             Type type, List<string> fields)
         {
             // Check for duplicates in fields?
@@ -77,11 +78,11 @@ namespace XmlGridReader
             //  - nodes and props have same casing
             //  - has correct number of nodes
             var orderedProps = fields.Select(f => props.Single(p => p.Name == f));
-            var paramReaderExp = Expression.Parameter(typeof(XmlReader), "reader");
+            var paramReaderExp = Expression.Parameter(typeof(XmlGridRowReader), "reader");
 
             var readElementContentAsStringMethodInfo =
-                typeof(XmlReader).GetMethod(
-                    nameof(XmlReader.ReadElementContentAsString),
+                typeof(XmlGridRowReader).GetMethod(
+                    nameof(XmlGridRowReader.ReadElementContentAsString),
                     new Type[] { });
 
             var initializerExps = orderedProps.Select(p =>
@@ -99,10 +100,10 @@ namespace XmlGridReader
                 Expression.New(type),
                 initializerExps);
 
-            return Expression.Lambda<Func<XmlReader, object>>(initExpression, paramReaderExp).Compile();
+            return Expression.Lambda<Func<XmlGridRowReader, object>>(initExpression, paramReaderExp).Compile();
         }
 
-        private static Func<XmlReader, object> CreateComplexTypeCtorDeserializer(Type type)
+        private static Func<XmlGridRowReader, object> CreateComplexTypeCtorDeserializer(Type type)
         {
             // TODO: cache XmlReader types?
             var ctor = type.GetConstructors().Single();
@@ -113,11 +114,11 @@ namespace XmlGridReader
             // Then assign the variables to the ctor params
             // in the correct order.
 
-            var paramReaderExp = Expression.Parameter(typeof(XmlReader), "reader");
+            var paramReaderExp = Expression.Parameter(typeof(XmlGridRowReader), "reader");
 
             var readElementContentAsStringMethodInfo =
-                typeof(XmlReader).GetMethod(
-                    nameof(XmlReader.ReadElementContentAsString),
+                typeof(XmlGridRowReader).GetMethod(
+                    nameof(XmlGridRowReader.ReadElementContentAsString),
                     new Type[] { });
 
             // Assumes
@@ -134,7 +135,7 @@ namespace XmlGridReader
 
             var newExp = Expression.New(ctor, argExps);
 
-            return Expression.Lambda<Func<XmlReader, object>>(newExp, paramReaderExp).Compile();
+            return Expression.Lambda<Func<XmlGridRowReader, object>>(newExp, paramReaderExp).Compile();
         }
 
         private static Expression GetTypeConverterExpression(
@@ -163,11 +164,11 @@ namespace XmlGridReader
                     nameof(TypeConverter.ConvertFromInvariantString),
                     new[] { typeof(string) });
 
-        private static Func<XmlReader, object> CreateValueTypeDeserializer(Type type)
+        private static Func<XmlGridRowReader, object> CreateValueTypeDeserializer(Type type)
         {
             var converter = GetTypeConverter(type);
 
-            return new Func<XmlReader, object>(r =>
+            return new Func<XmlGridRowReader, object>(r =>
             {
                 return converter.ConvertFromInvariantString(
                     r.ReadElementContentAsString());

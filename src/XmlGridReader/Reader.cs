@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Dynamic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -40,8 +41,13 @@ namespace XmlGridReader
 
                 return result;
             }
-
         }
+
+        public static IEnumerable<dynamic> Read(string xml)
+        {
+            return Read<ExpandoObject>(xml);
+        }
+
         private static Func<XmlGridRowReader, object> GetDeserializer(
             Type type, XmlGridRowReader reader)
         {
@@ -51,6 +57,11 @@ namespace XmlGridReader
         private static Func<XmlGridRowReader, object> CreateDeserializer(
             Type type, List<string> fields)
         {
+            if (type == typeof(ExpandoObject))
+            {
+                return CreateDynamicDeserializer(fields);
+            }
+
             if (type == typeof(string) || type.IsValueType)
             {
                 return CreateValueTypeDeserializer(type);
@@ -65,6 +76,22 @@ namespace XmlGridReader
             }
 
             return CreateComplexTypePropDerializer(type, fields);
+        }
+
+        private static Func<XmlGridRowReader, object> CreateDynamicDeserializer(
+            List<string> fields)
+        {
+            return new Func<XmlGridRowReader, object>(reader =>
+            {
+                var obj = new ExpandoObject();
+
+                foreach (var field in fields)
+                {
+                    obj.TryAdd(field, reader.ReadColumnValue());
+                }
+
+                return obj;
+            });
         }
 
         private static Func<XmlGridRowReader, object> CreateComplexTypePropDerializer(

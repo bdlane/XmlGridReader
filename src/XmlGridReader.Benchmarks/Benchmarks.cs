@@ -11,6 +11,7 @@ using BenchmarkDotNet.Mathematics;
 namespace XmlGridReader.Benchmarks
 {
     [RankColumn(NumeralSystem.Arabic)]
+    [MemoryDiagnoser]
     public class Benchmarks
     {
         private string xml;

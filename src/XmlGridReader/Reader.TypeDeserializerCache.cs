@@ -44,7 +44,7 @@ namespace XmlGridReader
             {
                 reader.ReadRow();
 
-                if (!reader.Columns.Any())
+                if (reader.Columns.Count == 0)
                 {
                     throw new InvalidOperationException("No columns");
                 }
@@ -97,12 +97,12 @@ namespace XmlGridReader
 
             public bool Equals(DeserializerKey other)
             {
-                if (hashCode != other.hashCode || fields.Count() != other.fields.Count())
+                if (hashCode != other.hashCode || fields.Count != other.fields.Count)
                 {
                     return false;
                 }
 
-                for (int i = 0; i < fields.Count(); i++)
+                for (int i = 0; i < fields.Count; i++)
                 {
                     if (fields[i] != other.fields[i])
                     {
